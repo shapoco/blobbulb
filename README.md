@@ -244,6 +244,20 @@ Object   Array   Primitive
 
 ----
 
+## Padding and Comments
+
+Paddings and Comments should be ignored at parsing.
+
+### Padding (`PAD`)
+
+- Can be used for data alignment.
+
+### Comment (`COM`)
+
+- UTF-8
+
+----
+
 ## Pre-defined Meta Data IDs
 
 (no IDs defined yet)
