@@ -35,8 +35,8 @@ universal binary data container.
 |TID\[3:0\]→<br>↓TID\[7:4\]|0x0|0x1|0x2|0x3|0x4-0xF|Token<br>Shape|
 |:--:|:--|:--|:--|:--|:--|:--:|
 |0x0|PAD|META||||FIX0|
-|0x1|OSTA|OEND|ASTA|AEND||FIX0|
-|0x2|DSTA|DEND||||FIX4|
+|0x1|OBJST|OBJED|ARYST|ARYED||FIX0|
+|0x2|DOCST|DOCED||||FIX4|
 |0x3|COM|||||BSEQ|
 |0x4|NULL|||||FIX0|
 |0x5||||||FIX0|
@@ -61,7 +61,7 @@ universal binary data container.
 
 ```
 - - - - - - - - - - - - -
-DSTA                  A
+DOCST                  A
  |                    |
  V                    |
 Meta Data Array       |
@@ -72,17 +72,17 @@ Meta Data Array       |
  |                    V
 -|- - - - - - - - - - - -
  V
-DEND
+DOCED
 ```
 
-- No tokens can be placed before `DSTA`.
-- No tokens can be placed after `DEND`.
+- No tokens can be placed before `DOCST`.
+- No tokens can be placed after `DOCED`.
 
-### Start of Document (`DSTA`)
+### Document Start (`DOCST`)
 
 |Offset|Mnemonic|Description|
 |:--:|:--:|:--|
-|+0|`DSTA`|Token ID|
+|+0|`DOCST`|Token ID|
 |+1|`FMTVER`|Version|
 |+2|`FMTFLG`|Flags|
 |+3|-|reserved|
@@ -99,11 +99,11 @@ DEND
 |\[7\]|`CRCEN`|CRC Enable|
 |\[6:0\]|-|reserved|
 
-### End of Document (`DEND`)
+### Document End (`DOCED`)
 
 |Offset|Mnemonic|Description|
 |:--:|:--:|:--|
-|+0|`DEND`|Token ID|
+|+0|`DOCED`|Token ID|
 |+1|`CRC[7:0]`|CRC|
 |+2|`CRC[15:8]`|CRC|
 |+3|`CRC[23:16]`|CRC|
@@ -116,7 +116,7 @@ DEND
 |`CRCEN` = 0|`0x00000000`|
 |`CRCEN` = 1|CRC Value|
 
-- CRC calculation must be performed on all bytes from the beginning of `DSTA` to before `DEND` (including `PAD` and `COM`).
+- CRC calculation must be performed on all bytes from the beginning of `DOCST` to before `DOCED` (including `PAD` and `COM`).
 - Polynomial for CRC: `0x04c11db7`.
 
 ### Variant
@@ -139,7 +139,7 @@ Object   Array   Primitive
 ```
  |
  V
-OSTA
+OBJST
  |
  V
 Meta Data Array
@@ -149,7 +149,7 @@ Meta Data Array
  +--> Key Value Pair --'  // member of the object
  |
  V
-OEND
+OBJED
  |
  V
 ```
@@ -159,7 +159,7 @@ OEND
 ```
  |
  V
-ASTA
+ARYST
  |
  V
 Meta Data Array
@@ -169,7 +169,7 @@ Meta Data Array
  +--> Variant --'  // element of the array
  |
  V
-AEND
+ARYED
  |
  V
 ```
