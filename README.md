@@ -30,28 +30,49 @@ universal binary data container.
 
 ----
 
-## Token ID (`TID`)
-
-|TID\[3:0\]→<br>↓TID\[7:4\]|0x0|0x1|0x2|0x3|0x4-0xF|Token<br>Shape|
-|:--:|:--|:--|:--|:--|:--|:--:|
-|0x0|PAD|META||||FIX0|
-|0x1|OBJST|OBJED|ARYST|ARYED||FIX0|
-|0x2|DOCST|DOCED||||FIX4|
-|0x3|COM|||||BSEQ|
-|0x4|NULL|||||FIX0|
-|0x5||||||FIX0|
-|0x6|UVL|IVL||||VLEN|
-|0x7|STR|||||BSEQ|
-|0x8|U8|I8||BOOL||FIX1|
-|0x9|U16|I16||||FIX2|
-|0xA|U32|I32|F32|||FIX4|
-|0xB|U64|I64|F64|TIME||FIX8|
-|0xC|U8A|I8A||BOOLA||BSEQ|
-|0xD|U16A|I16A||||BSEQ|
-|0xE|U32A|I32A|F32A|||BSEQ|
-|0xF|U64A|I64A|F64A|TIMEA||BSEQ|
+## Token Mnemonic and Shapes
 
 - empty cell: reserved for future
+
+### C-Stlye Number Primitive
+
+|TID|0x00|0x01|0x02|0x03|0x04|0x05|0x06|0x07|
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+|0x80|U8|U16|U32|U64|BOOL|||TIME|
+|0x90|I8|I16|I32|I64|||||
+|0xA0|||F32|F64|||||
+|0xB0|||||||||
+|Shape|FIX1|FIX2|FIX4|FIX8|FIX1|FIX2|FIX4|FIX8|
+
+### C-Stlye Number Primitive Array
+
+|TID|0x00|0x01|0x02|0x03|0x04|0x05|0x06|0x07|
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+|0xC0|U8A|U16A|U32A|U64A|BOOLA|||TIMEA|
+|0xD0|I8A|I16A|I32A|I64A|||||
+|0xE0|||F32A|F64A|||||
+|0xF0|||||||||
+|Shape|BSEQ|BSEQ|BSEQ|BSEQ|BSEQ|BSEQ|BSEQ|BSEQ|
+
+### Non-C-Stlye Number Primitive
+
+|TID|0x08|0x09|0x0A|0x0B|0x0C|0x0D|0x0E|0x0F|
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+|0x80|NULL||||UVL|IVL|STR||
+|0x90|||||||||
+|0xA0|||||||||
+|0xB0|||||||||
+|Shape|FIX0|FIX0|FIX0|FIX0|VLEN|VLEN|BSEQ|BSEQ|
+
+### Control Token
+
+|TID|0x08|0x09|0x0A|0x0B|0x0C|0x0D|0x0E|0x0F|
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+|0xC0|META||OBJST|OBJED|||DOCST|DOCED|
+|0xD0|||ARYST|ARYED|||||
+|0xE0|||||||||
+|0xF0|PAD||||||COM||
+|Shape|FIX0|FIX0|FIX0|FIX0|VLEN|VLEN|BSEQ|BSEQ|
 
 ----
 
@@ -60,17 +81,16 @@ universal binary data container.
 ### Document
 
 ```
-- - - - - - - - - - - - -
-DOCST                  A
- |                    |
- V                    |
-Meta Data Array       |
- |                    | CRC calculation target
- +--> Variant --,     |
- |              |     |
- |<-------------'     |
- |                    V
--|- - - - - - - - - - - -
+DOCST
+ |
+ V
+Meta Data Array
+ |
+ +--> Variant --,
+ |              |
+ |<-------------'
+ |
+ |
  V
 DOCED
 ```
@@ -83,10 +103,13 @@ DOCED
 |Offset|Mnemonic|Description|
 |:--:|:--:|:--|
 |+0|`DOCST`|Token ID|
-|+1|`FMTVER`|Version|
-|+2|`FMTFLG`|Flags|
-|+3|-|reserved|
-|+4|-|reserved|
+|+1|`SIZE_VLQ`|Size = 0x06|
+|+2|-|0x42 (`'B'`)|
+|+3|-|0x4e (`'N'`)|
+|+4|`FMTVER`|Version|
+|+5|`FMTFLG`|Flags|
+|+6|-|reserved|
+|+7|-|reserved|
 
 #### Version (`FMTVER`)
 
@@ -104,10 +127,13 @@ DOCED
 |Offset|Mnemonic|Description|
 |:--:|:--:|:--|
 |+0|`DOCED`|Token ID|
-|+1|`CRC[7:0]`|CRC|
-|+2|`CRC[15:8]`|CRC|
-|+3|`CRC[23:16]`|CRC|
-|+4|`CRC[31:24]`|CRC|
+|+1|`SIZE_VLQ`|Size = 0x06|
+|+2|-|reserved|
+|+3|-|reserved|
+|+4|`CRC[7:0]`|CRC|
+|+5|`CRC[15:8]`|CRC|
+|+6|`CRC[23:16]`|CRC|
+|+7|`CRC[31:24]`|CRC|
 
 #### CRC (`CRC`)
 
@@ -116,7 +142,7 @@ DOCED
 |`CRCEN` = 0|`0x00000000`|
 |`CRCEN` = 1|CRC Value|
 
-- CRC calculation must be performed on all bytes from the beginning of `DOCST` to before `DOCED` (including `PAD` and `COM`).
+- CRC calculation must be performed on all bytes from the beginning of `DOCST` to before `CRC` (including `PAD` and `COM`).
 - Polynomial for CRC: `0x04c11db7`.
 
 ### Variant
