@@ -170,7 +170,7 @@ Object   Array   Primitive
 |+6||||`VALUE[55:48]`|
 |+7||||`VALUE[63:56]`|
 
-- `VALUE`: integer value (two's complement)
+- `VALUE`: unsigned/signed integer value (two's complement)
 
 ### Floating Point (Fn)
 
