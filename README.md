@@ -73,8 +73,8 @@ Meta Data Array                 |
 DEND
 ```
 
-- No tokens can be placed in before `DSTA`.
-- No tokens can be placed in after `DEND`.
+- No tokens can be placed before `DSTA`.
+- No tokens can be placed after `DEND`.
 
 ### Start of Document (`DSTA`)
 
@@ -116,6 +116,21 @@ DEND
 
 - CRC calculation must be performed on all bytes from the beginning of `DSTA` to before `DEND` (including `PAD` and `COM`).
 - Polynomial for CRC: `0x04c11db7`.
+
+### Variant
+
+```
+ |
+ +---------+---------,
+ |         |         |
+ V         V         V
+Object   Array   Primitive
+ |         |         |
+ |         V         |
+ |<------------------'
+ |
+ V
+```
 
 ### Object
 
@@ -185,22 +200,7 @@ Variant  // Value
  V
 ```
 
-- for object member JSON, only STR can be used for Key.
-
-### Variant
-
-```
- |
- +---------+---------,
- |         |         |
- V         V         V
-Object   Array   Primitive
- |         |         |
- |         V         |
- |<------------------'
- |
- V
-```
+- for object member of JSON, only STR can be used for Key.
 
 ----
 
