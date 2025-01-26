@@ -2,50 +2,52 @@
 
 ## Basic Token Shape
 
-### FIXn: Fixed-Length
+### Fixed-Length (`FIXn`)
+
+- `n` = 0, 1, 2, 4, or 8
 
 |Offset|Size \[Bytes\]|Mnemonic|Description|
 |:--:|:--:|:--:|:--|
 |+0|1|`TID`|Token ID|
 |+1|`n` defined by `TID`|`DATA`|Data|
 
-### VLQ: Variable Length Quantity
+### Variable Length Number (`VLEN`)
 
 |Offset|Size \[Bytes\]|Mnemonic|Description|
 |:--:|:--:|:--:|:--|
 |+0|1|`TID`|Token ID|
 |+1|1-8|`VALUE_VLQ`|Data expressed in VLQ|
 
-### BARY: Byte Array
+### Byte Sequence (`BSEQ`)
 
 |Offset|Size \[Bytes\]|Mnemonic|Description|
 |:--:|:--:|:--:|:--|
 |+0|1|`TID`|Token ID|
 |+1|1-8|`SIZE_VLQ`|Length of `DATA` in bytes, expressed in VLQ|
-|+(1 + sizeof(`SIZE_VLQ`))|`SIZE_VLQ`|`DATA`|Byte array|
+|+(1 + sizeof(`SIZE_VLQ`))|`SIZE_VLQ`|`DATA`|Byte sequence|
 
 ----
 
-## Token Definition
+## Token ID (`TID`)
 
 |TID\[3:0\]→<br>↓TID\[7:4\]|0x0|0x1|0x2|0x3|0x4-0xF|Token<br>Shape|
 |:--:|:--:|:--:|:--:|:--:|:--:|:--:|
 |0x0|PAD🟢|BODY🟢|META|||FIX0|
 |0x1|OSTA🟢|OEND🟢|ASTA🟢|AEND🟢||FIX0|
-|0x2||||||VLQ|
-|0x3|COM|DSTA🟢|DEND🟢|||BARY|
+|0x2||||||VLEN|
+|0x3|COM|DSTA🟢|DEND🟢|||BSEQ|
 |0x4|NULL🟢|||||FIX0|
 |0x5||||||FIX0|
-|0x6|UVLQ|IVLQ||||VLQ|
-|0x7|STR🟢|||||BARY|
+|0x6|UVL|IVL||||VLEN|
+|0x7|STR🟢|||||BSEQ|
 |0x8|U8|I8||BOOL🟢||FIX1|
 |0x9|U16|I16||||FIX2|
 |0xA|U32|I32|F32|||FIX4|
 |0xB|U64|I64|F64🟢|TIME||FIX8|
-|0xC|U8A|I8A||BOOLA||BARY|
-|0xD|U16A|I16A||||BARY|
-|0xE|U32A|I32A|F32A|||BARY|
-|0xF|U64A|I64A|F64A|TIMEA||BARY|
+|0xC|U8A|I8A||BOOLA||BSEQ|
+|0xD|U16A|I16A||||BSEQ|
+|0xE|U32A|I32A|F32A|||BSEQ|
+|0xF|U64A|I64A|F64A|TIMEA||BSEQ|
 
 - 🟢: compatible with JSON
 - empty cell: reserved for future
@@ -132,7 +134,7 @@ AEND
  +----,
  |    |
  V    V
-STR  UVLQ  // Key
+STR  UVL  // Key
  |    |
  |<---'
  |
@@ -141,6 +143,8 @@ Variant  // Value
  |
  V
 ```
+
+- for object member JSON, only STR can be used for Key.
 
 ### Variant
 
@@ -159,7 +163,11 @@ Object   Array   Primitive
 
 ----
 
-### Integer (Un, In)
+## Primitive Value Token
+
+### Integer (`Un`, `In`)
+
+- `n` = 8, 16, 32, or 64
 
 |Offset|U8, I8|U16, I16|U32, I32|U64, I64|
 |:--:|:--:|:--:|:--:|:--:|
@@ -174,9 +182,11 @@ Object   Array   Primitive
 
 - `VALUE`: unsigned/signed integer value (two's complement)
 
-### Floating Point (Fn)
+### Floating Point (`Fn`)
 
-|Offset|U32, I32|U64, I64|
+- `n` = 32 or 64
+
+|Offset|F32|F64|
 |:--:|:--:|:--:|
 |+0|`VALUE[7:0]`|`VALUE[7:0]`|
 |+1|`VALUE[15:8]`|`VALUE[15:8]`|
@@ -189,14 +199,14 @@ Object   Array   Primitive
 
 - `VALUE`: floating point value (IEEE754)
 
-### Boolean (BOOL)
+### Boolean (`BOOL`)
 
 |Value|Mnemonic|
 |:-:|:---:|
 |0x00|`false`|
 |0x01-0xff|`true`|
 
-### Date Time (TIME)
+### Date Time (`TIME`)
 
 |Offset|Description|
 |:--:|:--|
@@ -213,16 +223,22 @@ Object   Array   Primitive
     - UNIX time in milliseconds
     - 56 bit signed integer
 
-### String (STR)
+----
+
+## Primitive Array (`xxxA`)
+
+- packed array of primitive values
+
+----
+
+## Non-Primitive Value Token
+
+### String (`STR`)
 
 - byte array
 - UTF-8
 
-### Primitive Array (xxxA)
-
-- packed array of primitive values
-
-### Null
+### Null (`NULL`)
 
 - same as `null` of JavaScript
 
