@@ -1,80 +1,144 @@
-# universal-binary-format (WIP)
+# Universal Binary Container (WIP)
 
-## Basic Element Syntax
+## Basic Token Shape
 
-### Fixed-length Element
-
-|Offset|Size|Mnemonic|Description|
-|:--:|:--:|:--:|:--|
-|0|1|`CC`|Control Code|
-|1|defined by `CC`<br>(see table below)|`DATA`|Data|
-
-### Variable-length Element 
-
-#### Except Keyword
+### FIXn: Fixed-Length
 
 |Offset|Size|Mnemonic|Description|
 |:--:|:--:|:--:|:--|
-|0|1|`CC` != `KWD`|Control Code|
-|1|1-8|`DSZ_VLQ`|Data Size in Bytes|
-|1+sizeof(`DSZ_VLQ`)|`DSZ`|`DATA`|Data|
+|0|1|`TID`|Token ID|
+|1|`n` defined by `TID`|`DATA`|Data|
 
-#### Keyword
+### VLQ: Variable Length Quantity
 
 |Offset|Size|Mnemonic|Description|
 |:--:|:--:|:--:|:--|
-|0|1|`CC` == `KWD`|Control Code|
-|1|1-2|`KID_VLQ`|Keyword ID|
+|0|1|`TID`|Token ID|
+|1|1-8|`VALUE`|Value|
 
-## CC: Control Code vs Mnemonic
+### BARY: Byte Array
 
+|Offset|Size|Mnemonic|Description|
+|:--:|:--:|:--:|:--|
+|0|1|`TID`|Token ID|
+|1|1-8|`LEN_VLQ`|Length of `DATA` in bytes, expressed in VLQ|
+|1 + sizeof(`LEN_VLQ`)|`LEN`|`DATA`|byte array|
+
+## TID: Token ID vs Shape and Mnemonic)
+
+- 🟢: compatible with JSON
 - empty cell: reserved for future
 
-|Category|Data Size<br>(Bytes)|＼CC\[3:0\]<br>CC\[7:4\]＼|0|1|2|3|4|...|F|
-|:--|:--|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-|Primitive|Fixed (1)|0|U8|I8|||BOOL|||
-|Primitive|Fixed (2)|1|U16|I16||||||
-|Primitive|Fixed (4)|2|U32|I32|F32|||||
-|Primitive|Fixed (8)|3|U64|I64|F64||TIME|||
-|Primitive Array|Variable (1*N)|4|U8A|I8A|||BOOLA|||
-|Primitive Array|Variable (2*N)|5|U16A|I16A||||||
-|Primitive Array|Variable (4*N)|6|U32A|I32A|F32A|||||
-|Primitive Array|Variable (8*N)|7|U64A|I64A|F64A||TIMEA|||
-|Special|Fixed (0)|8|NULL|||||||
-||Fixed (0)|9||||||||
-|String|Variable|A|STR|||||||
-||Variable|B||||||||
-|Control|Fixed (0)|C|SOO|EOO|SOA|EOA||||
-|Control|Fixed (0)|D|META|BODY|||||PAD|
-|Control|Variable|E|SOD|EOD||||||
-|Control|Variable|F|||||||KWD|
+|＼TID\[3:0\]<br>TID\[7:4\]＼|0|1|2|3|4-F|Token<br>Shape|
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+|0|PAD🟢|BODY🟢|META|||FIX0|
+|1|OSTA🟢|OEND🟢|ASTA🟢|AEND🟢||FIX0|
+|2||||||VLQ|
+|3|COM|DSTA🟢|DEND🟢|||BARY|
+|4|NULL🟢|||||FIX0|
+|5||||||FIX0|
+|6|UVLQ|IVLQ||||VLQ|
+|7|STR🟢|||||BARY|
+|8|U8|I8||BOOL🟢||FIX1|
+|9|U16|I16||||FIX2|
+|A|U32|I32|F32|||FIX4|
+|B|U64|I64|F64🟢|TIME||FIX8|
+|C|U8A|I8A||BOOLA||BARY|
+|D|U16A|I16A||||BARY|
+|E|U32A|I32A|F32A|||BARY|
+|F|U64A|I64A|F64A|TIMEA||BARY|
 
-## DSZ: Data Size
-
-- TODO: Variable-Length Quantity
+----
 
 ## Syntax
 
 ### Document
 
 ```
-SOD
+DSTA
  |
  V
-Meta Array
+Meta Data Array
  |
  +--> BODY --> Variant --,
  |                       |
  |<----------------------'
  |
  V
-EOD
+DEND
 ```
 
-### SOD: Start of Document
+### DSTA: Start of Document
 
-### EOD: End of Document
+### DEND: End of Document
 
+### Object
+
+```
+ |
+ V
+OSTA
+ |
+ V
+Meta Data Array
+ |
+ |<--------------------,
+ |                     |
+ +--> Key Value Pair --'  // a member of the object
+ |
+ V
+OEND
+ |
+ V
+```
+
+### Array
+
+```
+ |
+ V
+ASTA
+ |
+ V
+Meta Data Array
+ |
+ |<-------------,
+ |              |
+ +--> Variant --'  // an element of the array
+ |
+ V
+AEND
+ |
+ V
+```
+
+### Meta Data Array
+
+```
+ |
+ |<-----------------------------,
+ |                              |
+ +--> META --> Key Value Pair --'
+ |
+ V
+```
+
+### Key Value Pair
+
+```
+ |
+ +----,
+ |    |
+ V    V
+STR  UVLQ  // Key
+ |    |
+ |<---'
+ |
+ V
+Variant  // Value
+ |
+ V
+```
 
 ### Variant
 
@@ -85,95 +149,84 @@ EOD
  V         V         V
 Object   Array   Primitive
  |         |         |
- |<--------'         |
+ |         V         |
  |<------------------'
  |
  V
 ```
 
-### Object
+----
 
-```
- |
- V
-SOO
- |
- V
-Meta Array
- |
- |<----------------------------,
- |                             |
- +--> Identifier --> Variant --'
- |
- V
-EOO
- |
- V
-```
+### Integer (Un, In)
 
-### Array
+|Offset|U8, I8|U16, I16|U32, I32|U64, I64|
+|:--:|:--:|:--:|:--:|:--:|
+|+0|`VALUE[7:0]`|`VALUE[7:0]`|`VALUE[7:0]`|`VALUE[7:0]`|
+|+1||`VALUE[15:8]`|`VALUE[15:8]`|`VALUE[15:8]`|
+|+2|||`VALUE[23:16]`|`VALUE[23:16]`|
+|+3|||`VALUE[31:24]`|`VALUE[31:24]`|
+|+4||||`VALUE[39:32]`|
+|+5||||`VALUE[47:40]`|
+|+6||||`VALUE[55:48]`|
+|+7||||`VALUE[63:56]`|
 
-```
- |
- V
-SOA
- |
- V
-Meta Array
- |
- |<-------------,
- |              |
- +--> Variant --'
- |
- V
-EOA
- |
- V
-```
+- `VALUE`: integer value (two's complement)
 
-### Meta Array
+### Floating Point (Fn)
 
-```
- |
- |<-------------------------------------,
- |                                      |
- +--> META --> Identifier --> Variant --'
- |
- V
-```
+|Offset|U32, I32|U64, I64|
+|:--:|:--:|:--:|
+|+0|`VALUE[7:0]`|`VALUE[7:0]`|
+|+1|`VALUE[15:8]`|`VALUE[15:8]`|
+|+2|`VALUE[23:16]`|`VALUE[23:16]`|
+|+3|`VALUE[31:24]`|`VALUE[31:24]`|
+|+4||`VALUE[39:32]`|
+|+5||`VALUE[47:40]`|
+|+6||`VALUE[55:48]`|
+|+7||`VALUE[63:56]`|
 
-### Identifier
+- `VALUE`: floating point value (IEEE754)
 
-```
- |
- +----,
- |    |
- V    V
-STR  KWD
- |    |
- |<---'
- |
- V
-```
+### Boolean (BOOL)
 
-### KWD: Keyword
+|Value|Mnemonic|
+|:-:|:---:|
+|0x00|`false`|
+|0x01-0xff|`true`|
 
-|`KID`|`KID_VLQ`|Raw String|
-|:--|:--|:--|
-||||
+### Date Time (TIME)
+
+|Offset|Description|
+|:--:|:--|
+|+0|`UNIX_TIME[7:0]`|
+|+1|`UNIX_TIME[15:8]`|
+|+2|`UNIX_TIME[23:16]`|
+|+3|`UNIX_TIME[31:24]`|
+|+4|`UNIX_TIME[39:32]`|
+|+5|`UNIX_TIME[47:40]`|
+|+6|`UNIX_TIME[55:48]`|
+|+7|reserved|
+
+- `UNIX_TIME`:
+    - UNIX time in milliseconds
+    - 56 bit signed integer
+
+### String (STR)
+
+- byte array in UTF-8
+
+### Primitive Array (xxxA)
+
+- packed array of primitive values
+
+### Null
+
+- same as `null` of JavaScript
 
 ----
 
-### Integer
+## Pre-defined Meta Data IDs
 
-### Floating Point
-
-### Boolean
-
-### Date Time
-
-### String
-
-### Null
+(no IDs defined yet)
 
 ----
