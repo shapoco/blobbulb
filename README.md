@@ -4,49 +4,51 @@
 
 ### FIXn: Fixed-Length
 
-|Offset|Size|Mnemonic|Description|
+|Offset|Size \[Bytes\]|Mnemonic|Description|
 |:--:|:--:|:--:|:--|
-|0|1|`TID`|Token ID|
-|1|`n` defined by `TID`|`DATA`|Data|
+|+0|1|`TID`|Token ID|
+|+1|`n` defined by `TID`|`DATA`|Data|
 
 ### VLQ: Variable Length Quantity
 
-|Offset|Size|Mnemonic|Description|
+|Offset|Size \[Bytes\]|Mnemonic|Description|
 |:--:|:--:|:--:|:--|
-|0|1|`TID`|Token ID|
-|1|1-8|`VALUE`|Value|
+|+0|1|`TID`|Token ID|
+|+1|1-8|`VALUE_VLQ`|Data expressed in VLQ|
 
 ### BARY: Byte Array
 
-|Offset|Size|Mnemonic|Description|
+|Offset|Size \[Bytes\]|Mnemonic|Description|
 |:--:|:--:|:--:|:--|
-|0|1|`TID`|Token ID|
-|1|1-8|`LEN_VLQ`|Length of `DATA` in bytes, expressed in VLQ|
-|1 + sizeof(`LEN_VLQ`)|`LEN`|`DATA`|byte array|
+|+0|1|`TID`|Token ID|
+|+1|1-8|`SIZE_VLQ`|Length of `DATA` in bytes, expressed in VLQ|
+|+(1 + sizeof(`SIZE_VLQ`))|`SIZE_VLQ`|`DATA`|Byte array|
 
-## TID: Token ID vs Shape and Mnemonic)
+----
+
+## Token Definition
+
+|TID\[3:0\]→<br>↓TID\[7:4\]|0x0|0x1|0x2|0x3|0x4-0xF|Token<br>Shape|
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+|0x0|PAD🟢|BODY🟢|META|||FIX0|
+|0x1|OSTA🟢|OEND🟢|ASTA🟢|AEND🟢||FIX0|
+|0x2||||||VLQ|
+|0x3|COM|DSTA🟢|DEND🟢|||BARY|
+|0x4|NULL🟢|||||FIX0|
+|0x5||||||FIX0|
+|0x6|UVLQ|IVLQ||||VLQ|
+|0x7|STR🟢|||||BARY|
+|0x8|U8|I8||BOOL🟢||FIX1|
+|0x9|U16|I16||||FIX2|
+|0xA|U32|I32|F32|||FIX4|
+|0xB|U64|I64|F64🟢|TIME||FIX8|
+|0xC|U8A|I8A||BOOLA||BARY|
+|0xD|U16A|I16A||||BARY|
+|0xE|U32A|I32A|F32A|||BARY|
+|0xF|U64A|I64A|F64A|TIMEA||BARY|
 
 - 🟢: compatible with JSON
 - empty cell: reserved for future
-
-|＼TID\[3:0\]<br>TID\[7:4\]＼|0|1|2|3|4-F|Token<br>Shape|
-|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-|0|PAD🟢|BODY🟢|META|||FIX0|
-|1|OSTA🟢|OEND🟢|ASTA🟢|AEND🟢||FIX0|
-|2||||||VLQ|
-|3|COM|DSTA🟢|DEND🟢|||BARY|
-|4|NULL🟢|||||FIX0|
-|5||||||FIX0|
-|6|UVLQ|IVLQ||||VLQ|
-|7|STR🟢|||||BARY|
-|8|U8|I8||BOOL🟢||FIX1|
-|9|U16|I16||||FIX2|
-|A|U32|I32|F32|||FIX4|
-|B|U64|I64|F64🟢|TIME||FIX8|
-|C|U8A|I8A||BOOLA||BARY|
-|D|U16A|I16A||||BARY|
-|E|U32A|I32A|F32A|||BARY|
-|F|U64A|I64A|F64A|TIMEA||BARY|
 
 ----
 
@@ -84,7 +86,7 @@ Meta Data Array
  |
  |<--------------------,
  |                     |
- +--> Key Value Pair --'  // a member of the object
+ +--> Key Value Pair --'  // member of the object
  |
  V
 OEND
@@ -104,7 +106,7 @@ Meta Data Array
  |
  |<-------------,
  |              |
- +--> Variant --'  // an element of the array
+ +--> Variant --'  // element of the array
  |
  V
 AEND
@@ -213,7 +215,8 @@ Object   Array   Primitive
 
 ### String (STR)
 
-- byte array in UTF-8
+- byte array
+- UTF-8
 
 ### Primitive Array (xxxA)
 
