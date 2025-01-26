@@ -1,4 +1,6 @@
-# Universal Binary Container (WIP)
+# BlobNest (WIP)
+
+universal binary data container.
 
 ## Basic Token Shape
 
