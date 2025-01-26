@@ -72,9 +72,9 @@ Meta Data Array
 DEND
 ```
 
-### DSTA: Start of Document
+### Start of Document (`DSTA`)
 
-### DEND: End of Document
+### End of Document (`DEND`)
 
 ### Object
 
@@ -163,7 +163,7 @@ Object   Array   Primitive
 
 ----
 
-## Primitive Value Token
+## Primitive Value
 
 ### Integer (`Un`, `In`)
 
@@ -231,7 +231,7 @@ Object   Array   Primitive
 
 ----
 
-## Non-Primitive Value Token
+## Non-Primitive Value
 
 ### String (`STR`)
 
