@@ -32,7 +32,7 @@
 
 |TID\[3:0\]→<br>↓TID\[7:4\]|0x0|0x1|0x2|0x3|0x4-0xF|Token<br>Shape|
 |:--:|:--|:--|:--|:--|:--|:--:|
-|0x0|PAD|BODY|META|||FIX0|
+|0x0|PAD|META||||FIX0|
 |0x1|OSTA|OEND|ASTA|AEND||FIX0|
 |0x2|DSTA|DEND||||FIX4|
 |0x3|COM|||||BSEQ|
@@ -58,17 +58,17 @@
 ### Document
 
 ```
-- - - - - - - - - - - - - - - - - -
-DSTA                            A
- |                              |
- V                              |
-Meta Data Array                 |
- |                              | CRC calculation target
- +--> BODY --> Variant --,      |
- |                       |      |
- |<----------------------'      |
- |                              V
--|- - - - - - - - - - - - - - - - -
+- - - - - - - - - - - - -
+DSTA                  A
+ |                    |
+ V                    |
+Meta Data Array       |
+ |                    | CRC calculation target
+ +--> Variant --,     |
+ |              |     |
+ |<-------------'     |
+ |                    V
+-|- - - - - - - - - - - -
  V
 DEND
 ```
