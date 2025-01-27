@@ -2,255 +2,251 @@
 
 universal binary data container.
 
-## Basic Token Shape
+## Token Format
 
-### Fixed-Length (`FIXn`)
+### Fixed Length Token
 
-- `n` = 0, 1, 2, 4, or 8
+|Offset|Single|Scalar1|Scalar2|Scalar4|Scalar8|
+|:--:|:--:|:--:|:--:|:--:|:--:|
+|+0|`OPCODE`|`OPCODE`|`OPCODE`|`OPCODE`|`OPCODE`|
+|+1|-|`VALUE`|`VALUE[7:0]`|`VALUE[7:0]`|`VALUE[7:0]`|
+|+2|-|-|`VALUE[15:8]`|`VALUE[15:8]`|`VALUE[15:8]`|
+|+3|-|-|-|`VALUE[23:16]`|`VALUE[23:16]`|
+|+4|-|-|-|`VALUE[31:24]`|`VALUE[31:24]`|
+|+5|-|-|-|-|`VALUE[39:32]`|
+|+6|-|-|-|-|`VALUE[47:40]`|
+|+7|-|-|-|-|`VALUE[55:48]`|
+|+8|-|-|-|-|`VALUE[63:56]`|
 
-|Offset|Size \[Bytes\]|Mnemonic|Description|
-|:--:|:--:|:--:|:--|
-|+0|1|`TID`|Token ID|
-|+1|`n` defined by `TID`|`DATA`|Data|
+### Valiable Length Token
 
-### Variable Length Number (`VLEN`)
+|Offset|ByteSeq1L|ByteSeq2L|ByteSeq4L|ByteSeq8L|
+|:--:|:--:|:--:|:--:|:--:|
+|+0|`OPCODE`|`OPCODE`|`OPCODE`|`OPCODE`|
+|+1|`SIZE`|`SIZE[7:0]`|`SIZE[7:0]`|`SIZE[7:0]`|
+|+2|`BYTE[0]`|`SIZE[15:8]`|`SIZE[15:8]`|`SIZE[15:8]`|
+|+3|`BYTE[1]`|`BYTE[0]`|`SIZE[23:16]`|`SIZE[23:16]`|
+|+4|`BYTE[2]`|`BYTE[1]`|`SIZE[31:24]`|`SIZE[31:24]`|
+|+5|:|`BYTE[2]`|`BYTE[0]`|`SIZE[39:32]`|
+|+6|:|:|`BYTE[1]`|`SIZE[47:40]`|
+|+7|:|:|`BYTE[2]`|`SIZE[55:48]`|
+|+8|:|:|:|`SIZE[63:56]`|
+|+9|:|:|:|`BYTE[0]`|
+|+10|:|:|:|`BYTE[1]`|
+|:|:|:|:|`BYTE[2]`|
+|:|:|:|:|:|
+|:|:|:|:|:|
+||`BYTE[SIZE-1]`|`BYTE[SIZE-1]`|`BYTE[SIZE-1]`|`BYTE[SIZE-1]`|
 
-|Offset|Size \[Bytes\]|Mnemonic|Description|
-|:--:|:--:|:--:|:--|
-|+0|1|`TID`|Token ID|
-|+1|1-8|`VALUE_VLQ`|Data expressed in VLQ|
+## OpCode Map
 
-### Byte Sequence (`BSEQ`)
+- Empty cell: Reserved for future use.
 
-|Offset|Size \[Bytes\]|Mnemonic|Description|
-|:--:|:--:|:--:|:--|
-|+0|1|`TID`|Token ID|
-|+1|1-8|`SIZE_VLQ`|Length of `DATA` in bytes, expressed in VLQ|
-|+(1 + sizeof(`SIZE_VLQ`))|`SIZE`|`DATA`|Byte sequence|
-
-----
-
-## Token Mnemonic and Shapes
-
-- empty cell: reserved for future
-
-### C-Stlye Number Primitive
-
-|TID|0x00|0x01|0x02|0x03|0x04|0x05|0x06|0x07|
-|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-|0x80|U8|U16|U32|U64|BOOL|||TIME|
-|0x90|I8|I16|I32|I64|||||
-|0xA0|||F32|F64|||||
-|0xB0|||||||||
-|Shape|FIX1|FIX2|FIX4|FIX8|FIX1|FIX2|FIX4|FIX8|
-
-### C-Stlye Number Primitive Array
-
-|TID|0x00|0x01|0x02|0x03|0x04|0x05|0x06|0x07|
-|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-|0xC0|U8A|U16A|U32A|U64A|BOOLA|||TIMEA|
-|0xD0|I8A|I16A|I32A|I64A|||||
-|0xE0|||F32A|F64A|||||
-|0xF0|||||||||
-|Shape|BSEQ|BSEQ|BSEQ|BSEQ|BSEQ|BSEQ|BSEQ|BSEQ|
-
-### Non-C-Stlye Number Primitive
-
-|TID|0x08|0x09|0x0A|0x0B|0x0C|0x0D|0x0E|0x0F|
-|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-|0x80|NULL||||UVL|IVL|STR||
-|0x90|||||||||
-|0xA0|||||||||
-|0xB0|||||||||
-|Shape|FIX0|FIX0|FIX0|FIX0|VLEN|VLEN|BSEQ|BSEQ|
-
-### Control Token
-
-|TID|0x08|0x09|0x0A|0x0B|0x0C|0x0D|0x0E|0x0F|
-|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-|0xC0|META||OBJST|OBJED|||DOCST|DOCED|
-|0xD0|||ARYST|ARYED|||||
-|0xE0|||||||||
-|0xF0|PAD||||||COM||
-|Shape|FIX0|FIX0|FIX0|FIX0|VLEN|VLEN|BSEQ|BSEQ|
+|`OPH\L`|+0x0|+0x1|+0x2||+0x8||+0xC|+0xD||+0xF|Shape|
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+|0x00|||||||||||reserved|
+|0x10|||||||||||reserved|
+|0x20|`NULL`||||||`ARYSTA`|`OBJSTA`|||Single|
+|0x30|`FALSE`|`TRUE`|||||`BLKEND`|`META`||`PAD`|Single|
+|0x40|`U6D00`|`U6D01`|...||...||...|...||`U6D0F`|Single|
+|0x50|`U6D10`|`U6D11`|...||...||...|...||`U6D1F`|Single|
+|0x60|`U6D20`|`U6D21`|...||...||...|...||`U6D2F`|Single|
+|0x70|`U6D30`|`U6D31`|...||...||...|...||`U6D3F`|Single|
+|0x80|`U8`|`S8`|`BOOL`||||`APACK`||||Scalar1|
+|0x90|`U16`|`S16`|||||`OPACK`||||Scalar2|
+|0xA0|`U32`|`S32`|`STR4B`||`F32`||||||Scalar4|
+|0xB0|`U64`|`S64`|`TIME`||`F64`||`DOCSTA`|`DOCEND`|||Scalar8|
+|0xC0|`BLOB1L`|`STR1L`|||||`CMNT1L`||||ByteSeq1L|
+|0xD0|`BLOB2L`|`STR2L`|||||`CMNT2L`||||ByteSeq2L|
+|0xE0|`BLOB4L`|`STR4L`|||||||||ByteSeq4L|
+|0xF0|`BLOB8L`|`STR8L`|||||||||ByteSeq8L|
 
 ----
 
 ## Syntax
 
-### Document
+```abnf
+document = DOCSTA [ <meta-block> ] [ <variant> ] DOCEND
 
-```
-DOCST
- |
- V
-Meta Data Array
- |
- +--> Variant --,
- |              |
- |<-------------'
- |
- |
- V
-DOCED
-```
+variant = <array> | <object> | <primitive>
 
-- No tokens can be placed before `DOCST`.
-- No tokens can be placed after `DOCED`.
+array = <unpacked-array> | <packed-array>
+unpacked-array = ARYSTA [ <meta-block> ] *<variant> BLKEND
+packed-array = APACK [ <meta-block> ] <blob>
 
-### Document Start (`DOCST`)
+object = <unpacked-object> | <packed-object>
+unpacked-object = OBJSTA [ <meta-block> ] *( <object-key> <variant> ) BLKEND
+packed-object = OPACK [ <meta-block> ] <blob>
+object-key = <number> | <string>
 
-|Offset|Mnemonic|Description|
-|:--:|:--:|:--|
-|+0|`DOCST`|Token ID|
-|+1|`SIZE_VLQ`|Size = 0x06|
-|+2|-|0x42 (`'B'`)|
-|+3|-|0x4e (`'N'`)|
-|+4|`FMTVER`|Version|
-|+5|`FMTFLG`|Flags|
-|+6|-|reserved|
-|+7|-|reserved|
+meta-block = META <object>
 
-#### Version (`FMTVER`)
+primitive = <number> | <boolean> | <string> | <blob> | TIME | NULL
 
-- `0x01`
+number = <unsigned-integer> | <signed-integer> | <float>
+unsigned-integer = U6Dxx | U8 | U16 | U32 | U64
+signed-integer = S8 | S16 | S32 | S64
+float = FP32 | FP64
 
-#### Flags (`FMTFLG`)
+boolean = BOOL | FALSE | TRUE
 
-|Bit Range|Mnemonic|Description|
-|:--:|:--:|:--|
-|\[7\]|`CRCEN`|CRC Enable|
-|\[6:0\]|-|reserved|
-
-### Document End (`DOCED`)
-
-|Offset|Mnemonic|Description|
-|:--:|:--:|:--|
-|+0|`DOCED`|Token ID|
-|+1|`SIZE_VLQ`|Size = 0x06|
-|+2|-|reserved|
-|+3|-|reserved|
-|+4|`CRC[7:0]`|CRC|
-|+5|`CRC[15:8]`|CRC|
-|+6|`CRC[23:16]`|CRC|
-|+7|`CRC[31:24]`|CRC|
-
-#### CRC (`CRC`)
-
-|Condition|Value of CRC|
-|:--:|:--|
-|`CRCEN` = 0|`0x00000000`|
-|`CRCEN` = 1|CRC Value|
-
-- CRC calculation must be performed on all bytes from the beginning of `DOCST` to before `CRC` (including `PAD` and `COM`).
-- Polynomial for CRC: `0x04c11db7`.
-
-### Variant
-
-```
- |
- +---------+---------,
- |         |         |
- V         V         V
-Object   Array   Primitive
- |         |         |
- |         V         |
- |<------------------'
- |
- V
+string = STR1L | STR2L | STR4L | STR8L | STR4B
+blob = BLOB1L | BLOB2L | BLOB4L | BLOB8L
 ```
 
-### Object
-
-```
- |
- V
-OBJST
- |
- V
-Meta Data Array
- |
- |<--------------------,
- |                     |
- +--> Key Value Pair --'  // member of the object
- |
- V
-OBJED
- |
- V
-```
-
-### Array
-
-```
- |
- V
-ARYST
- |
- V
-Meta Data Array
- |
- |<-------------,
- |              |
- +--> Variant --'  // element of the array
- |
- V
-ARYED
- |
- V
-```
-
-### Meta Data Array
-
-```
- |
- |<-----------------------------,
- |                              |
- +--> META --> Key Value Pair --'
- |
- V
-```
-
-### Key Value Pair
-
-```
- |
- +----,
- |    |
- V    V
-STR  UVL  // Key
- |    |
- |<---'
- |
- V
-Variant  // Value
- |
- V
-```
-
-- for object member of JSON, only STR can be used for Key.
+- No tokens can be placed before `DOCSTA`.
+- No tokens can be placed after `DOCEND`.
 
 ----
 
-## Primitive Value
+## Document Level Tokens
+
+### Document Start (`DOCSTA`)
+
+|Offset|Mnemonic|Description|
+|:--:|:--:|:--|
+|+0|`DOCSTA`|See OpCode Map|OpCode|
+|+1|`MARKER1`|0x42 (`'B'`)|
+|+2|`MARKER2`|0x4e (`'N'`)|
+|+3|`MARKER3`|0x73 (`'s'`)|
+|+4|`MARKER4`|0x74 (`'t'`)|
+|+5|`format_version`|Format Version Number|
+|+6|`format_flags`|Flags|
+|+7|-|reserved|
+|+8|-|reserved|
+
+#### Version (`format_version`)
+
+`0x01`
+
+#### Flags (`format_flags`)
+
+|Bit Range|Mnemonic|Description|
+|:--:|:--:|:--|
+|\[7\]|`enable_crc`|CRC Enable|
+|\[6:0\]|-|reserved|
+
+### Document End (`DOCEND`)
+
+|Offset|Mnemonic|Description|
+|:--:|:--:|:--|
+|+0|`DOCEND`|OpCode|
+|+1|-|reserved|
+|+2|-|reserved|
+|+3|-|reserved|
+|+4|-|reserved|
+|+5|`crc[7:0]`|CRC|
+|+6|`crc[15:8]`|CRC|
+|+7|`crc[23:16]`|CRC|
+|+8|`crc[31:24]`|CRC|
+
+#### CRC (`crc`)
+
+|Condition|Value of CRC|
+|:--:|:--|
+|`enable_crc` = 0|`0x00000000`|
+|`enable_crc` = 1|CRC Value|
+
+- CRC calculation must be performed on all bytes from the beginning of `DOCSTA` to before `CRC` field (including `PAD` and `COM`).
+- Polynomial for CRC: `0x04c11db7`.
+
+----
+
+## Array / Object Packing
+
+### Packed Array (`APACK`)
+
+|Offset|Mnemonic|Description|
+|:--:|:--:|:--|
+|+0|`APACK`|OpCode|
+|+1|`value_packing_arg`|Value Packing Argument|
+
+#### `value_packing_arg`
+
+|Bit Range|Mnemonic|Description|
+|:--:|:--:|:--|
+|7:6|`align_size`|Aligment Size|
+|5:0|`val_type`|Value Type|
+
+#### `align_size`
+
+|Value|Description|
+|:--:|:--|
+|0|No Padding|
+|1|2 Byte|
+|2|4 Byte|
+|3|8 Byte|
+
+#### `val_type`
+
+|`val_type[3:0]`|OpCode|
+|:--:|:--:|
+|0x0-B|`val_type` + 0x80 (128)|
+|0xC-F|`val_type` + 0xB4 (180)|
+
+### Packed Object (`OPACK`)
+
+|Offset|Mnemonic|Description|
+|:--:|:--:|:--|
+|+0|`OPACK`|OpCode|
+|+1|`key_packing_arg`|Key Packing Argument|
+|+2|`value_packing_arg`|Value Packing Argument|
+
+#### `key_packing_arg`
+
+|Bit Range|Mnemonic|Description|
+|:--:|:--:|:--|
+|7:6|`align_size`|Aligment Size|
+|5|`separate_kv`|Make keys and value into separate chunks|
+|4|reserved|
+|3:0|`key_type`|Value Type|
+
+#### `align_size`
+
+Same as `align_size` of `value_packing_arg`
+
+#### `key_type`
+
+|`key_type[1:0]`|Key Type|
+|:--:|:--:|
+|0x0|`U8`|
+|0x1|`U16`|
+|0x2|`U32`|
+|0x3|`U64`|
+|0x4|`S8`|
+|0x5|`S16`|
+|0x6|`S32`|
+|0x7|`S64`|
+|0x8|reserved|
+|0x9|reserved|
+|0xA|`STR4B`|
+|0xB|reserved|
+|0xC|`STR1L`|
+|0xD|`STR2L`|
+|0xE|`STR4L`|
+|0xF|`STR8L`|
+
+----
+
+## POT Primitive Value
 
 ### Integer (`Un`, `In`)
 
 - `n` = 8, 16, 32, or 64
 
-|Offset|U8, I8|U16, I16|U32, I32|U64, I64|Description|
+|Offset|U8, S8|U16, S16|U32, S32|U64, S64|Description|
 |:--:|:--:|:--:|:--:|:--:|:--|
-|+0|`TID`|`TID`|`TID`|`TID`|Token ID|
-|+1|`VALUE[7:0]`|`VALUE[7:0]`|`VALUE[7:0]`|`VALUE[7:0]`|Value|
-|+2||`VALUE[15:8]`|`VALUE[15:8]`|`VALUE[15:8]`|Value|
-|+3|||`VALUE[23:16]`|`VALUE[23:16]`|Value|
-|+4|||`VALUE[31:24]`|`VALUE[31:24]`|Value|
-|+5||||`VALUE[39:32]`|Value|
-|+6||||`VALUE[47:40]`|Value|
-|+7||||`VALUE[55:48]`|Value|
-|+8||||`VALUE[63:56]`|Value|
+|+0|`TID`|`TID`|`TID`|`TID`|OpCode|
+|+1|`value[7:0]`|`value[7:0]`|`value[7:0]`|`value[7:0]`|Value|
+|+2||`value[15:8]`|`value[15:8]`|`value[15:8]`|Value|
+|+3|||`value[23:16]`|`value[23:16]`|Value|
+|+4|||`value[31:24]`|`value[31:24]`|Value|
+|+5||||`value[39:32]`|Value|
+|+6||||`value[47:40]`|Value|
+|+7||||`value[55:48]`|Value|
+|+8||||`value[63:56]`|Value|
 
-- `VALUE`: unsigned/signed integer value (two's complement)
+- `value`: unsigned/signed integer value (two's complement)
 
 ### Floating Point (`Fn`)
 
@@ -258,62 +254,75 @@ Variant  // Value
 
 |Offset|F32|F64|Description|
 |:--:|:--:|:--:|:--|
-|+0|`TID`|`TID`|Token ID|
-|+1|`VALUE[7:0]`|`VALUE[7:0]`|Value|
-|+2|`VALUE[15:8]`|`VALUE[15:8]`|Value|
-|+3|`VALUE[23:16]`|`VALUE[23:16]`|Value|
-|+4|`VALUE[31:24]`|`VALUE[31:24]`|Value|
-|+5||`VALUE[39:32]`|Value|
-|+6||`VALUE[47:40]`|Value|
-|+7||`VALUE[55:48]`|Value|
-|+8||`VALUE[63:56]`|Value|
+|+0|`TID`|`TID`|OpCode|
+|+1|`value[7:0]`|`value[7:0]`|Value|
+|+2|`value[15:8]`|`value[15:8]`|Value|
+|+3|`value[23:16]`|`value[23:16]`|Value|
+|+4|`value[31:24]`|`value[31:24]`|Value|
+|+5||`value[39:32]`|Value|
+|+6||`value[47:40]`|Value|
+|+7||`value[55:48]`|Value|
+|+8||`value[63:56]`|Value|
 
-- `VALUE`: floating point value (IEEE754)
+- `value`: floating point value (IEEE754)
 
-### Boolean (`BOOL`)
+### Boolean (`BOOL`, `FALSE`, `TRUE`)
 
 |Offset|Mnemonic|Description|
 |:--:|:--:|:--|
-|+0|`BOOL`|Token ID|
-|+1|`VALUE`|Value|
+|+0|`BOOL`|OpCode|
+|+1|`value`|Value|
 
-|`VALUE`|Mnemonic|
+|`value`|Description|
 |:--:|:---|
-|0x00|`false`|
-|0x01-0xff|`true`|
+|0x00|value of false|
+|0x01-0xff|value of true|
+
+- `FALSE` and `TRUE` are shortened forms of `BOOL`.
 
 ### Date Time (`TIME`)
 
 |Offset|Mnemonic|Description|
 |:--:|:--:|:--|
-|+0|`TIME`|Token ID|
-|+1|`UNIX_TIME[7:0]`|UNIX time|
-|+2|`UNIX_TIME[15:8]`|UNIX time|
-|+3|`UNIX_TIME[23:16]`|UNIX time|
-|+4|`UNIX_TIME[31:24]`|UNIX time|
-|+5|`UNIX_TIME[39:32]`|UNIX time|
-|+6|`UNIX_TIME[47:40]`|UNIX time|
-|+7|`UNIX_TIME[55:48]`|UNIX time|
+|+0|`TIME`|OpCode|
+|+1|`unix_time[7:0]`|UNIX time|
+|+2|`unix_time[15:8]`|UNIX time|
+|+3|`unix_time[23:16]`|UNIX time|
+|+4|`unix_time[31:24]`|UNIX time|
+|+5|`unix_time[39:32]`|UNIX time|
+|+6|`unix_time[47:40]`|UNIX time|
+|+7|`unix_time[55:48]`|UNIX time|
 |+8|-|reserved|
 
-- `UNIX_TIME`:
+- `unix_time`:
     - UNIX time in milliseconds
     - 56 bit signed integer
 
 ----
 
-## Primitive Array (`xxxA`)
+## Non-POT Primitive
 
-- Packed array of primitive values.
-- Number of elements in array = `floor(number of bytes of DATA / element size)`.
+### Blob (`BLOBnL`)
 
-----
+- Arbitrary byte sequence.
 
-## Non-Primitive Value
-
-### String (`STR`)
+### Variable Length String (`STRnL`)
 
 - Byte array of UTF-8.
+
+### 4-Byte String (`STR4B`)
+
+- US-ASCII string.
+- `"xyz"` is same as `0x007a7978`.
+- All unused bytes must be filled with `0x00`.
+
+|Length|Byte\[0\]|Byte\[1\]|Byte\[2\]|Byte\[3\]|
+|:--:|:--:|:--:|:--:|:--:|
+|0|`0x00`|`0x00`|`0x00`|`0x00`|
+|1|Char\[0\]|`0x00`|`0x00`|`0x00`|
+|2|Char\[0\]|Char\[1\]|`0x00`|`0x00`|
+|3|Char\[0\]|Char\[1\]|Char\[2\]|`0x00`|
+|4|Char\[0\]|Char\[1\]|Char\[2\]|Char\[3\]|
 
 ### Null (`NULL`)
 
@@ -329,14 +338,17 @@ Variant  // Value
 
 - Can be used for data alignment.
 
-### Comment (`COM`)
+### Comment (`CMNTnL`)
 
 - Byte array of UTF-8.
 
 ----
 
-## Pre-defined Meta Data IDs
+#### Pre-defined Meta Data IDs
 
-(no IDs defined yet)
+|Identifier|Description|
+|:--:|:--|
+|0-63|Reserved|
+|others|User Defined|
 
 ----
