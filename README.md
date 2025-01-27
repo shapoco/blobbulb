@@ -2,6 +2,44 @@
 
 universal binary data container.
 
+----
+
+## Syntax
+
+```abnf
+document = DOCSTA [ <meta-block> ] [ <variant> ] DOCEND
+
+variant = <array> | <object> | <primitive>
+
+array = <unpacked-array> | <packed-array>
+unpacked-array = ARYSTA [ <meta-block> ] *<variant> BLKEND
+packed-array = APACK [ <meta-block> ] <blob>
+
+object = <unpacked-object> | <packed-object>
+unpacked-object = OBJSTA [ <meta-block> ] *( <object-key> <variant> ) BLKEND
+packed-object = OPACK [ <meta-block> ] <blob>
+object-key = <number> | <string>
+
+meta-block = META <object>
+
+primitive = <number> | <boolean> | <string> | <blob> | TIME | NULL
+
+number = <unsigned-integer> | <signed-integer> | <float>
+unsigned-integer = U8 | U16 | U32 | U64 | U6Dxx
+signed-integer = S8 | S16 | S32 | S64
+float = FP32 | FP64
+
+boolean = BOOL | FALSE | TRUE
+
+string = STR1L | STR2L | STR4L | STR8L | STR4B
+blob = BLOB1L | BLOB2L | BLOB4L | BLOB8L
+```
+
+- No tokens can be placed before `DOCSTA`.
+- No tokens can be placed after `DOCEND`.
+
+----
+
 ## Token Format
 
 ### Fixed Length Token
@@ -63,42 +101,6 @@ universal binary data container.
 
 ----
 
-## Syntax
-
-```abnf
-document = DOCSTA [ <meta-block> ] [ <variant> ] DOCEND
-
-variant = <array> | <object> | <primitive>
-
-array = <unpacked-array> | <packed-array>
-unpacked-array = ARYSTA [ <meta-block> ] *<variant> BLKEND
-packed-array = APACK [ <meta-block> ] <blob>
-
-object = <unpacked-object> | <packed-object>
-unpacked-object = OBJSTA [ <meta-block> ] *( <object-key> <variant> ) BLKEND
-packed-object = OPACK [ <meta-block> ] <blob>
-object-key = <number> | <string>
-
-meta-block = META <object>
-
-primitive = <number> | <boolean> | <string> | <blob> | TIME | NULL
-
-number = <unsigned-integer> | <signed-integer> | <float>
-unsigned-integer = U6Dxx | U8 | U16 | U32 | U64
-signed-integer = S8 | S16 | S32 | S64
-float = FP32 | FP64
-
-boolean = BOOL | FALSE | TRUE
-
-string = STR1L | STR2L | STR4L | STR8L | STR4B
-blob = BLOB1L | BLOB2L | BLOB4L | BLOB8L
-```
-
-- No tokens can be placed before `DOCSTA`.
-- No tokens can be placed after `DOCEND`.
-
-----
-
 ## Document Level Tokens
 
 ### Document Start (`DOCSTA`)
@@ -154,6 +156,8 @@ blob = BLOB1L | BLOB2L | BLOB4L | BLOB8L
 
 ## Array / Object Packing
 
+![](./images/separate_kv.png)
+
 ### Packed Array (`APACK`)
 
 |Offset|Mnemonic|Description|
@@ -165,17 +169,17 @@ blob = BLOB1L | BLOB2L | BLOB4L | BLOB8L
 
 |Bit Range|Mnemonic|Description|
 |:--:|:--:|:--|
-|7:6|`align_size`|Aligment Size|
+|7:6|`value_align_size`|Aligment Size|
 |5:0|`val_type`|Value Type|
 
-#### `align_size`
+#### `value_align_size`
 
-|Value|Description|
+|Value|Aligment Boundary|
 |:--:|:--|
-|0|No Padding|
-|1|2 Byte|
-|2|4 Byte|
-|3|8 Byte|
+|0|No aligmnent|
+|1|2 Byte boundary|
+|2|4 Byte boundary|
+|3|8 Byte boundary|
 
 #### `val_type`
 
@@ -196,14 +200,14 @@ blob = BLOB1L | BLOB2L | BLOB4L | BLOB8L
 
 |Bit Range|Mnemonic|Description|
 |:--:|:--:|:--|
-|7:6|`align_size`|Aligment Size|
+|7:6|`key_align_size`|Aligment Size|
 |5|`separate_kv`|Make keys and value into separate chunks|
 |4|reserved|
 |3:0|`key_type`|Value Type|
 
-#### `align_size`
+#### `key_align_size`
 
-Same as `align_size` of `value_packing_arg`
+See `value_align_size`
 
 #### `key_type`
 
