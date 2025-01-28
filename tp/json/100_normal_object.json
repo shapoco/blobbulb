@@ -1,3 +1,10 @@
 {
-    "hello": "piyopiyo"
+    "hello": "piyopiyo",
+    "thisIsArray": [
+        1,
+        false,
+        true,
+        "This is String",
+        null
+    ]
 }
