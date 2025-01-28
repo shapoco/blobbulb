@@ -28,7 +28,7 @@ primitive = <number> | <boolean> | <string> | <blob> | TIME | NULL
 
 number = <unsigned-integer> | <signed-integer> | <float>
 unsigned-integer = U8 | U16 | U32 | U64 | U6Dxx
-signed-integer = S8 | S16 | S32 | S64
+signed-integer = I8 | I16 | I32 | I64
 float = FP32 | FP64
 
 boolean = BOOL | FALSE | TRUE
@@ -92,10 +92,10 @@ blob = BLOB1L | BLOB2L | BLOB4L | BLOB8L
 |0x50|`U6D10`|`U6D11`|...||...||...|...||`U6D1F`|Single|
 |0x60|`U6D20`|`U6D21`|...||...||...|...||`U6D2F`|Single|
 |0x70|`U6D30`|`U6D31`|...||...||...|...||`U6D3F`|Single|
-|0x80|`U8`|`S8`|`BOOL`||||`APACK`||||Scalar1|
-|0x90|`U16`|`S16`|||||`OPACK`||||Scalar2|
-|0xA0|`U32`|`S32`|`STR4B`||`F32`||||||Scalar4|
-|0xB0|`U64`|`S64`|`TIME`||`F64`||`DOCSTA`|`DOCEND`|||Scalar8|
+|0x80|`U8`|`I8`|`BOOL`||||`APACK`||||Scalar1|
+|0x90|`U16`|`I16`|||||`OPACK`||||Scalar2|
+|0xA0|`U32`|`I32`|`STR4B`||`F32`||||||Scalar4|
+|0xB0|`U64`|`I64`|`TIME`||`F64`||`DOCSTA`|`DOCEND`|||Scalar8|
 |0xC0|`BLOB1L`|`STR1L`|||||`CMNT1L`||||ByteSeq1L|
 |0xD0|`BLOB2L`|`STR2L`|||||`CMNT2L`||||ByteSeq2L|
 |0xE0|`BLOB4L`|`STR4L`|||||||||ByteSeq4L|
@@ -221,10 +221,10 @@ Alignment is performed based on the beginning of the blob data, not the beginnin
 |0x1|`U16`|
 |0x2|`U32`|
 |0x3|`U64`|
-|0x4|`S8`|
-|0x5|`S16`|
-|0x6|`S32`|
-|0x7|`S64`|
+|0x4|`I8`|
+|0x5|`I16`|
+|0x6|`I32`|
+|0x7|`I64`|
 |0x8|reserved|
 |0x9|reserved|
 |0xA|`STR4B`|
@@ -242,7 +242,7 @@ Alignment is performed based on the beginning of the blob data, not the beginnin
 
 - `n` = 8, 16, 32, or 64
 
-|Offset|U8, S8|U16, S16|U32, S32|U64, S64|Description|
+|Offset|U8, I8|U16, I16|U32, I32|U64, I64|Description|
 |:--:|:--:|:--:|:--:|:--:|:--|
 |+0|`TID`|`TID`|`TID`|`TID`|OpCode|
 |+1|`value[7:0]`|`value[7:0]`|`value[7:0]`|`value[7:0]`|Value|

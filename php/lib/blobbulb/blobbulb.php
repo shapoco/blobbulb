@@ -1,6 +1,6 @@
 <?php
 
-namespace blobhive;
+namespace bllb;
 
 enum Op :int {
   case ARYSTA = 0x2c;
@@ -8,124 +8,188 @@ enum Op :int {
   case BLKEND = 0x3c;
   case DOCSTA = 0xbc;
   case DOCEND = 0xbd;
+  case U6D00 = 0x40;
+  case U8 = 0x80;
   case U16 = 0x90;
+  case U32 = 0xa0;
+  case U64 = 0xb0;
+  case I8 = 0x81;
+  case I16 = 0x91;
+  case I32 = 0xa1;
+  case I64 = 0xb1;
   case STR4B = 0xa2;
+  case STR1L = 0xc1;
+  case STR2L = 0xd1;
+  case STR4L = 0xe1;
+  case STR8L = 0xf1;
 }
 
+function obj2bllb($obj): string {
 
+}
 
-class Document {
-  private bool $finished = false;
-  private string $buff = '';
+function variant($value): IVariant {
+  if (is_array( $value )) {
+    if (isObject($value)) {
+      return new BObject($value);
+    }
+    else {
+      return new BArray($value);
+    }
+  }
+  else {
+    return new BPrimitive($value);
+  }
+}
+
+class GenerationContext {
+  private string $buff;
   
-  public function __construct() {
-    $this->rawTokenId(Op::DOCSTA);
-    $this->rawU32(0x56484c42); // 'BNst'
-    $this->rawU8(0x01); // version
-    $this->rawU8(0x00); // flags
-    $this->rawU8(0);
-    $this->rawU8(0);
+  public function rawOp(Op $op): void {
+    $this->rawU8($op->value);
   }
   
-  private function rawTokenId(Op $tid) {
-    $this->rawU8($tid->value);
+  public function rawBlobOp(Op $baseOp, int $size): int {
+    if ($size <= 0xff) {
+      $this->rawU8($baseOp->value);
+      return 0;
+    }
+    else if ($size <= 0xffff) {
+      $this->rawU8($baseOp->value + 0x10);
+      return 1;
+    }
+    else if ($size <= 0xffffffff) {
+      $this->rawU8($baseOp->value + 0x20);
+      return 2;
+    }
+    else {
+      $this->rawU8($baseOp->value + 0x30);
+      return 3;
+    }
   }
   
-  private function rawU8(int $value) {
+  public function rawU8(int $value): void {
     $this->buff .= pack("C", $value);
   }
   
-  private function rawU16(int $value) {
+  public function rawU16(int $value): void {
     $this->buff .= pack("v", $value);
   }
   
-  private function rawU32(int $value) {
+  public function rawU32(int $value): void {
     $this->buff .= pack("V", $value);
   }
-  
-  public function documentEnd() {
-    if ($this->finished) return;
-    $this->rawTokenId(Op::DOCEND);
-    $this->rawU32(0);
-    $this->rawU32(0);
+
+  public function rawU64(int $value): void {
+    $this->buff .= pack("V", $value & 0xffffffff); $value >>= 32;
+    $this->buff .= pack("V", $value & 0xffffffff);
   }
-  
-  public function u16(int $value) {
-    $this->rawTokenId(Op::U16);
-    $this->rawU16(0);
-  }
-  
-  public function str($str) {
-    $n = strlen($str);
-    $this->rawTokenId(Op::STR4B);
-    for ($i=0; $i<4; $i++) {
-      if ($i<$n) {
-        $this->rawU8(ord(substr($str, $i)));
+
+  public function intNum(int $value): void {
+    if (is_float($value) && floor($value) == $value) {
+      $value = (int)floor($value);
+    }
+    if (is_int($value)) {
+      if (0 <= $value) {
+        if ($value <= 0x3f) {
+          $this->rawU8(Op::U6D00->value + $value);
+        }
+        else if ($value <= 0xff) {
+          $this->rawOp(Op::U8);
+          $this->rawU8($value);
+        }
+        else if ($value <= 0xffff) {
+          $this->rawOp(Op::U16);
+          $this->rawU16($value);
+        }
+        else if ($value <= 0xffffffff) {
+          $this->rawOp(Op::U32);
+          $this->rawU32($value);
+        }
+        else {
+          $this->rawOp(Op::U64);
+          $this->rawU64($value);
+        }
       }
       else {
-        $this->rawU8(0);
+        if ($value >= -0x80) {
+          $this->rawOp(Op::I8);
+          $this->rawU8($value);
+        }
+        else if ($value >= -0x8000) {
+          $this->rawOp(Op::I16);
+          $this->rawU16($value);
+        }
+        else if ($value >= -0x80000000) {
+          $this->rawOp(Op::I32);
+          $this->rawU32($value);
+        }
+        else {
+          $this->rawOp(Op::I64);
+          $this->rawU64($value);
+        }
       }
     }
   }
-  
-  public function objectStart() {
-    $this->rawTokenId(Op::OBJSTA);
-  }
-  
-  public function objectEnd() {
-    $this->rawTokenId(Op::BLKEND);
-  }
-  
-  public function arrayStart() {
-    $this->rawTokenId(Op::ARYSTA);
-  }
-  
-  public function arrayEnd() {
-    $this->rawTokenId(Op::BLKEND);
-  }
-  
-  public function getString() {
-    $this->documentEnd();
-    return $this->buff;
-  }
-}
 
-class BhObject {
-  private array $buff = array();
-  public function __construct(array $obj) {
-    foreach($obj as $k => $v) {
-      $buff[$k] = bhVariant($v);
+  public function str(string $str): void {
+    $size = strlen($str);
+    if ($size <= 4) {
+      $this->rawOp(Op::STR4B);
+      $this->buff .= $str . str_repeat('\0', 4 - $size);
+    }
+    else {
+      $this->rawBlobOp(Op::STR1L, $size);
     }
   }
 }
 
-class BhArray {
+interface IVariant {
+  public function generateBllb(GenerationContext $ctx): void;
+}
+
+class BArray implements IVariant {
   private array $buff = array();
   public function __construct(array $obj) {
     foreach($obj as $v) {
-      array_push($this->buff, bhVariant($v));
+      array_push($this->buff, variant($v));
     }
+  }
+
+  public function generateBllb(GenerationContext $ctx): void {
+    $ctx->rawOp(Op::ARYSTA);
+    foreach($this->buff as $v) {
+      $v->generateBllb($ctx);
+    }
+    $ctx->rawOp(Op::BLKEND);
   }
 }
 
-class BhPrimitive {
+class BObject implements IVariant {
+  private array $buff = array();
+  public function __construct(array $obj) {
+    foreach($obj as $k => $v) {
+      $buff[$k] = variant($v);
+    }
+  }
+
+  public function generateBllb(GenerationContext $ctx): void {
+    $ctx->rawOp(Op::OBJSTA);
+    foreach($this->buff as $k => $v) {
+      variant($k)->generateBllb($ctx);
+      $v->generateBllb($ctx);
+    }
+    $ctx->rawOp(Op::BLKEND);
+  }
+}
+
+class BPrimitive implements IVariant {
   private $value = null;
   public function __construct($value) {
     $this->value = $value;
   }
-}
 
-function bhVariant($value) {
-  if (is_array( $value )) {
-    if (isObject($value)) {
-      return new BhObject($value);
-    }
-    else {
-      return new BhArray($value);
-    }
-  }
-  else {
-    return new BhPrimitive($value);
+  public function generateBllb(GenerationContext $ctx): void {
   }
 }
 
