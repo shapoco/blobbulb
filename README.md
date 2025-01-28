@@ -6,21 +6,23 @@ universal binary data container.
 
 ## Syntax
 
+A BlobNest document consists of a set of "token".
+
 ```abnf
-document = DOCSTA [ <meta-block> ] [ <variant> ] DOCEND
+document = DOCSTA [ <meta-object> ] [ <variant> ] DOCEND
 
 variant = <array> | <object> | <primitive>
 
 array = <unpacked-array> | <packed-array>
-unpacked-array = ARYSTA [ <meta-block> ] *<variant> BLKEND
-packed-array = APACK [ <meta-block> ] <blob>
+unpacked-array = ARYSTA [ <meta-object> ] *<variant> BLKEND
+packed-array = APACK [ <meta-object> ] <blob>
 
 object = <unpacked-object> | <packed-object>
-unpacked-object = OBJSTA [ <meta-block> ] *( <object-key> <variant> ) BLKEND
-packed-object = OPACK [ <meta-block> ] <blob>
+unpacked-object = OBJSTA [ <meta-object> ] *( <object-key> <variant> ) BLKEND
+packed-object = OPACK [ <meta-object> ] <blob>
 object-key = <number> | <string>
 
-meta-block = META <object>
+meta-object = META <object>
 
 primitive = <number> | <boolean> | <string> | <blob> | TIME | NULL
 
@@ -149,14 +151,12 @@ blob = BLOB1L | BLOB2L | BLOB4L | BLOB8L
 |`enable_crc` = 0|`0x00000000`|
 |`enable_crc` = 1|CRC Value|
 
-- CRC calculation must be performed on all bytes from the beginning of `DOCSTA` to before `CRC` field (including `PAD` and `COM`).
+- CRC calculation must be performed on all bytes from the beginning of `DOCSTA` to before `CRC` field (including padding and comments).
 - Polynomial for CRC: `0x04c11db7`.
 
 ----
 
 ## Array / Object Packing
-
-![](./images/separate_kv.png)
 
 ### Packed Array (`APACK`)
 
@@ -207,7 +207,11 @@ blob = BLOB1L | BLOB2L | BLOB4L | BLOB8L
 
 #### `key_align_size`
 
-See `value_align_size`
+See table of `value_align_size`.
+
+Alignment is performed based on the beginning of the blob data, not the beginning of the document.
+
+![](./images/separate_kv.png)
 
 #### `key_type`
 
@@ -336,7 +340,8 @@ See `value_align_size`
 
 ## Padding and Comments
 
-- Paddings and Comments should be ignored at parsing.
+- Padding and comments can be placed between any tokens. They must not be placed before `DOCSTA` and after `DOCEND`.
+- Padding and comments must be skipped during the parsing.
 
 ### Padding (`PAD`)
 
