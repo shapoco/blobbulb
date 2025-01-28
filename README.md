@@ -110,10 +110,10 @@ blob = BLOB1L | BLOB2L | BLOB4L | BLOB8L
 |Offset|Mnemonic|Description|
 |:--:|:--:|:--|
 |+0|`DOCSTA`|See OpCode Map|OpCode|
-|+1|`MARKER1`|0x42 (`'B'`)|
-|+2|`MARKER2`|0x4e (`'l'`)|
-|+3|`MARKER3`|0x73 (`'H'`)|
-|+4|`MARKER4`|0x74 (`'v'`)|
+|+1|`MARKER[7:0]`|0x42 (`'B'`)|
+|+2|`MARKER[15:8]`|0x6c (`'l'`)|
+|+3|`MARKER[23:16]`|0x62 (`'b'`)|
+|+4|`MARKER[31:24]`|0x48 (`'H'`)|
 |+5|`format_version`|Format Version Number|
 |+6|`format_flags`|Flags|
 |+7|-|reserved|
