@@ -1,4 +1,4 @@
-# BlobNest (WIP)
+# BlobHive (WIP)
 
 universal binary data container.
 
@@ -6,7 +6,7 @@ universal binary data container.
 
 ## Syntax
 
-A BlobNest document consists of a set of "token".
+A BlobHive document consists of a set of "token".
 
 ```abnf
 document = DOCSTA [ <meta-object> ] [ <variant> ] DOCEND
@@ -111,9 +111,9 @@ blob = BLOB1L | BLOB2L | BLOB4L | BLOB8L
 |:--:|:--:|:--|
 |+0|`DOCSTA`|See OpCode Map|OpCode|
 |+1|`MARKER1`|0x42 (`'B'`)|
-|+2|`MARKER2`|0x4e (`'N'`)|
-|+3|`MARKER3`|0x73 (`'s'`)|
-|+4|`MARKER4`|0x74 (`'t'`)|
+|+2|`MARKER2`|0x4e (`'l'`)|
+|+3|`MARKER3`|0x73 (`'H'`)|
+|+4|`MARKER4`|0x74 (`'v'`)|
 |+5|`format_version`|Format Version Number|
 |+6|`format_flags`|Flags|
 |+7|-|reserved|
