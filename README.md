@@ -1,4 +1,4 @@
-# BlobHive (WIP)
+# BlobBulb (WIP)
 
 universal binary data container.
 
@@ -6,7 +6,7 @@ universal binary data container.
 
 ## Syntax
 
-A BlobHive document consists of a set of "token".
+A BlobBulb document consists of a set of "token".
 
 ```abnf
 document = DOCSTA [ <meta-object> ] [ <variant> ] DOCEND
@@ -112,8 +112,8 @@ blob = BLOB1L | BLOB2L | BLOB4L | BLOB8L
 |+0|`DOCSTA`|See OpCode Map|OpCode|
 |+1|`MARKER[7:0]`|0x42 (`'B'`)|
 |+2|`MARKER[15:8]`|0x6c (`'l'`)|
-|+3|`MARKER[23:16]`|0x62 (`'b'`)|
-|+4|`MARKER[31:24]`|0x48 (`'H'`)|
+|+3|`MARKER[23:16]`|0x4c (`'L'`)|
+|+4|`MARKER[31:24]`|0x62 (`'b'`)|
 |+5|`format_version`|Format Version Number|
 |+6|`format_flags`|Flags|
 |+7|-|reserved|
