@@ -33,8 +33,8 @@ float = FP32 | FP64
 
 boolean = BOOL | FALSE | TRUE
 
-string = STR1L | STR2L | STR4L | STR8L | STR4B
-blob = BLOB1L | BLOB2L | BLOB4L | BLOB8L
+string = STR1X | STR2X | STR4X | STR8X | STR4B
+blob = BLOB1X | BLOB2X | BLOB4X | BLOB8X
 ```
 
 - No tokens can be placed before `DOCSTA`.
@@ -60,7 +60,7 @@ blob = BLOB1L | BLOB2L | BLOB4L | BLOB8L
 
 ### Valiable Length Token
 
-|Offset|ByteSeq1L|ByteSeq2L|ByteSeq4L|ByteSeq8L|
+|Offset|ByteSeq1|ByteSeq2|ByteSeq4|ByteSeq8|
 |:--:|:--:|:--:|:--:|:--:|
 |+0|`OPCODE`|`OPCODE`|`OPCODE`|`OPCODE`|
 |+1|`SIZE`|`SIZE[7:0]`|`SIZE[7:0]`|`SIZE[7:0]`|
@@ -96,10 +96,10 @@ blob = BLOB1L | BLOB2L | BLOB4L | BLOB8L
 |0x90|`U16`|`I16`|||||`OPACK`||||Scalar2|
 |0xA0|`U32`|`I32`|`STR4B`||`F32`||||||Scalar4|
 |0xB0|`U64`|`I64`|`TIME`||`F64`||`DOCSTA`|`DOCEND`|||Scalar8|
-|0xC0|`BLOB1L`|`STR1L`|||||`CMNT1L`||||ByteSeq1L|
-|0xD0|`BLOB2L`|`STR2L`|||||`CMNT2L`||||ByteSeq2L|
-|0xE0|`BLOB4L`|`STR4L`|||||||||ByteSeq4L|
-|0xF0|`BLOB8L`|`STR8L`|||||||||ByteSeq8L|
+|0xC0|`BLOB1X`|`STR1X`|||||`CMNT1X`||||ByteSeq1|
+|0xD0|`BLOB2X`|`STR2X`|||||`CMNT2X`||||ByteSeq2|
+|0xE0|`BLOB4X`|`STR4X`|||||||||ByteSeq4|
+|0xF0|`BLOB8X`|`STR8X`|||||||||ByteSeq8|
 
 ----
 
@@ -229,10 +229,10 @@ Alignment is performed based on the beginning of the blob data, not the beginnin
 |0x9|reserved|
 |0xA|`STR4B`|
 |0xB|reserved|
-|0xC|`STR1L`|
-|0xD|`STR2L`|
-|0xE|`STR4L`|
-|0xF|`STR8L`|
+|0xC|`STR1X`|
+|0xD|`STR2X`|
+|0xE|`STR4X`|
+|0xF|`STR8X`|
 
 ----
 

@@ -27,10 +27,10 @@ enum Op :int {
   case I64 = 0xb1;
 
   case STR4B = 0xa2;
-  case STR1L = 0xc1;
-  case STR2L = 0xd1;
-  case STR4L = 0xe1;
-  case STR8L = 0xf1;
+  case STR1X = 0xc1;
+  case STR2X = 0xd1;
+  case STR4X = 0xe1;
+  case STR8X = 0xf1;
 
   case NULL = 0x20;
 }
@@ -162,7 +162,7 @@ class BlobBuilder {
       $this->buff .= $value . str_repeat('\0', 4 - $size);
     }
     else {
-      $this->rawBlobOp(Op::STR1L, $size);
+      $this->rawBlobOp(Op::STR1X, $size);
       $this->buff .= $value;
     }
   }
