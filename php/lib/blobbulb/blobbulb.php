@@ -198,19 +198,19 @@ class BlobBuilder {
   
   public function rawBlobOp(Op $baseOp, int $size): int {
     if ($size <= 0xff) {
-      $this->rawU8($baseOp->value);
+      $this->rawOp(Op::from($baseOp->value));
       return 0;
     }
     else if ($size <= 0xffff) {
-      $this->rawU16($baseOp->value + 0x10);
+      $this->rawOp(Op::from($baseOp->value + 0x10));
       return 1;
     }
     else if ($size <= 0xffffffff) {
-      $this->rawU32($baseOp->value + 0x20);
+      $this->rawOp(Op::from($baseOp->value + 0x20));
       return 2;
     }
     else {
-      $this->rawU64($baseOp->value + 0x30);
+      $this->rawOp(Op::from($baseOp->value + 0x30));
       return 3;
     }
   }
