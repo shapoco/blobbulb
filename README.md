@@ -1,6 +1,6 @@
-# BlobBulb (WIP)
-
-universal binary data container.
+<p align="center"><img width="128" height="128" src="https://github.com/shapoco/blobbulb/blob/main/images/logo_256.png"></p>
+<h1 align="center">BlobBulb (WIP)</h1>
+<p align="center">a universal binary data container format.</p>
 
 ----
 
