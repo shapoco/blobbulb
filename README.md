@@ -21,12 +21,12 @@ variant = <array> | <object> | <primitive>
 
 array = <unpacked-array> | <packed-array>
 unpacked-array = [ <meta-object> ] ARYSTA *<variant> BLKEND
-packed-array = [ <meta-object> ] APACK
+packed-array = [ <meta-object> ] APACK <blob>
 
 object = <unpacked-object> | <packed-object>
 unpacked-object = [ <meta-object> ] OBJSTA *( <object-key> <variant> ) BLKEND
 object-key = <number> | <string>
-packed-object = [ <meta-object> ] OPACK
+packed-object = [ <meta-object> ] OPACK <blob>
 
 primitive = <number> | <boolean> | <time> | <string> | <blob> | <null>
 
