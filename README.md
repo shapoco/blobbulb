@@ -9,32 +9,44 @@
 A BlobBulb document consists of a set of "token".
 
 ```abnf
-document = DOCSTA [ <meta-object> ] [ <variant> ] DOCEND
+document = DOCSTA [ <dictionary> ] [ <body> ] DOCEND
+
+dictionary = DICT OBJSTA *( <dictionary-key> <dictionary-value> ) BLKEND
+dictionary-key = U6Dxx | U8 | U16
+dictionary-value = STR1X
+
+body = [ <meta-object> ] BODY [ <variant> ]
 
 variant = <array> | <object> | <primitive>
 
 array = <unpacked-array> | <packed-array>
-unpacked-array = ARYSTA [ <meta-object> ] *<variant> BLKEND
-packed-array = APACK [ <meta-object> ] <blob>
+unpacked-array = [ <meta-object> ] ARYSTA *<variant> BLKEND
+packed-array = [ <meta-object> ] APACK
 
 object = <unpacked-object> | <packed-object>
-unpacked-object = OBJSTA [ <meta-object> ] *( <object-key> <variant> ) BLKEND
-packed-object = OPACK [ <meta-object> ] <blob>
+unpacked-object = [ <meta-object> ] OBJSTA *( <object-key> <variant> ) BLKEND
 object-key = <number> | <string>
+packed-object = [ <meta-object> ] OPACK
 
-meta-object = META <object>
-
-primitive = <number> | <boolean> | <string> | <blob> | TIME | NULL
+primitive = <number> | <boolean> | <time> | <string> | <blob> | <null>
 
 number = <unsigned-integer> | <signed-integer> | <float>
-unsigned-integer = U8 | U16 | U32 | U64 | U6Dxx
-signed-integer = I8 | I16 | I32 | I64
-float = FP32 | FP64
+unsigned-integer = [ <meta-object> ] ( U6Dxx | U8 | U16 | U32 | U64 )
+signed-integer = [ <meta-object> ] ( I8 | I16 | I32 | I64 )
+float = [ <meta-object> ] ( FP32 | FP64 )
 
-boolean = BOOL | FALSE | TRUE
+boolean = [ <meta-object> ] ( BOOL | FALSE | TRUE )
+time = [ <meta-object> ] TIME
+null = [ <meta-object> ] NULL
 
-string = STR1X | STR2X | STR4X | STR8X | STR4B
-blob = BLOB1X | BLOB2X | BLOB4X | BLOB8X
+string = <short-string> | <variable-length-string> | <string-dictionary-reference>
+short-string = [ <meta-object> ] ( STR1B | STR2B | STR4B | STR8B )
+variable-length-string = [ <meta-object> ] ( STR1X | STR2X | STR4X | STR8X )
+string-dictionary-reference = [ <meta-object> ] ( SREF8 | SREF16 )
+
+blob = [ <meta-object> ] ( BLOB1X | BLOB2X | BLOB4X | BLOB8X )
+
+meta-object = META <object>
 ```
 
 - No tokens can be placed before `DOCSTA`.
@@ -48,58 +60,58 @@ blob = BLOB1X | BLOB2X | BLOB4X | BLOB8X
 
 |Offset|Single|Scalar1|Scalar2|Scalar4|Scalar8|
 |:--:|:--:|:--:|:--:|:--:|:--:|
-|+0|`OPCODE`|`OPCODE`|`OPCODE`|`OPCODE`|`OPCODE`|
-|+1|-|`VALUE`|`VALUE[7:0]`|`VALUE[7:0]`|`VALUE[7:0]`|
-|+2|-|-|`VALUE[15:8]`|`VALUE[15:8]`|`VALUE[15:8]`|
-|+3|-|-|-|`VALUE[23:16]`|`VALUE[23:16]`|
-|+4|-|-|-|`VALUE[31:24]`|`VALUE[31:24]`|
-|+5|-|-|-|-|`VALUE[39:32]`|
-|+6|-|-|-|-|`VALUE[47:40]`|
-|+7|-|-|-|-|`VALUE[55:48]`|
-|+8|-|-|-|-|`VALUE[63:56]`|
+|+0|`opcode`|`opcode`|`opcode`|`opcode`|`opcode`|
+|+1|-|`value`|`value[7:0]`|`value[7:0]`|`value[7:0]`|
+|+2|-|-|`value[15:8]`|`value[15:8]`|`value[15:8]`|
+|+3|-|-|-|`value[23:16]`|`value[23:16]`|
+|+4|-|-|-|`value[31:24]`|`value[31:24]`|
+|+5|-|-|-|-|`value[39:32]`|
+|+6|-|-|-|-|`value[47:40]`|
+|+7|-|-|-|-|`value[55:48]`|
+|+8|-|-|-|-|`value[63:56]`|
 
 ### Valiable Length Token
 
 |Offset|ByteSeq1|ByteSeq2|ByteSeq4|ByteSeq8|
 |:--:|:--:|:--:|:--:|:--:|
-|+0|`OPCODE`|`OPCODE`|`OPCODE`|`OPCODE`|
-|+1|`SIZE`|`SIZE[7:0]`|`SIZE[7:0]`|`SIZE[7:0]`|
-|+2|`BYTE[0]`|`SIZE[15:8]`|`SIZE[15:8]`|`SIZE[15:8]`|
-|+3|`BYTE[1]`|`BYTE[0]`|`SIZE[23:16]`|`SIZE[23:16]`|
-|+4|`BYTE[2]`|`BYTE[1]`|`SIZE[31:24]`|`SIZE[31:24]`|
-|+5|:|`BYTE[2]`|`BYTE[0]`|`SIZE[39:32]`|
-|+6|:|:|`BYTE[1]`|`SIZE[47:40]`|
-|+7|:|:|`BYTE[2]`|`SIZE[55:48]`|
-|+8|:|:|:|`SIZE[63:56]`|
-|+9|:|:|:|`BYTE[0]`|
-|+10|:|:|:|`BYTE[1]`|
-|:|:|:|:|`BYTE[2]`|
+|+0|`opcode`|`opcode`|`opcode`|`opcode`|
+|+1|`size`|`size[7:0]`|`size[7:0]`|`size[7:0]`|
+|+2|`data[0]`|`size[15:8]`|`size[15:8]`|`size[15:8]`|
+|+3|`data[1]`|`data[0]`|`size[23:16]`|`size[23:16]`|
+|+4|`data[2]`|`data[1]`|`size[31:24]`|`size[31:24]`|
+|+5|:|`data[2]`|`data[0]`|`size[39:32]`|
+|+6|:|:|`data[1]`|`size[47:40]`|
+|+7|:|:|`data[2]`|`size[55:48]`|
+|+8|:|:|:|`size[63:56]`|
+|+9|:|:|:|`data[0]`|
+|+10|:|:|:|`data[1]`|
+|:|:|:|:|`data[2]`|
 |:|:|:|:|:|
 |:|:|:|:|:|
-||`BYTE[SIZE-1]`|`BYTE[SIZE-1]`|`BYTE[SIZE-1]`|`BYTE[SIZE-1]`|
+||`data[size-1]`|`data[size-1]`|`data[size-1]`|`data[size-1]`|
 
 ## OpCode Map
 
-- Empty cell: Reserved for future use.
+- Empty cell: Reserved for future use
 
-|`OPH\L`|+0x0|+0x1|+0x2||+0x8||+0xC|+0xD||+0xF|Shape|
-|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-|0x00|||||||||||reserved|
-|0x10|||||||||||reserved|
-|0x20|`NULL`||||||`ARYSTA`|`OBJSTA`|||Single|
-|0x30|`FALSE`|`TRUE`|||||`BLKEND`|`META`||`PAD`|Single|
-|0x40|`U6D00`|`U6D01`|...||...||...|...||`U6D0F`|Single|
-|0x50|`U6D10`|`U6D11`|...||...||...|...||`U6D1F`|Single|
-|0x60|`U6D20`|`U6D21`|...||...||...|...||`U6D2F`|Single|
-|0x70|`U6D30`|`U6D31`|...||...||...|...||`U6D3F`|Single|
-|0x80|`U8`|`I8`|`BOOL`||||`APACK`||||Scalar1|
-|0x90|`U16`|`I16`|||||`OPACK`||||Scalar2|
-|0xA0|`U32`|`I32`|`STR4B`||`F32`||||||Scalar4|
-|0xB0|`U64`|`I64`|`TIME`||`F64`||`DOCSTA`|`DOCEND`|||Scalar8|
-|0xC0|`BLOB1X`|`STR1X`|||||`CMNT1X`||||ByteSeq1|
-|0xD0|`BLOB2X`|`STR2X`|||||`CMNT2X`||||ByteSeq2|
-|0xE0|`BLOB4X`|`STR4X`|||||||||ByteSeq4|
-|0xF0|`BLOB8X`|`STR8X`|||||||||ByteSeq8|
+|`opcode`<br>(H\\L)|+0x0|+0x1|+0x2|+0x3||+0x8||+0xB|+0xC|+0xD|+0xE|+0xF|Shape|
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+|0x00|||||||||||||reserved|
+|0x10|||||||||`BODY`|||`PAD`|Single|
+|0x20|`NULL`||||||||`ARYSTA`|`OBJSTA`|||Single|
+|0x30|`FALSE`|`TRUE`|||||||`BLKEND`|`DICT`|`META`||Single|
+|0x40|`U6D00`|`U6D01`|...|...||...||...|...|...|...|`U6D0F`|Single|
+|0x50|`U6D10`|`U6D11`|...|...||...||...|...|...|...|`U6D1F`|Single|
+|0x60|`U6D20`|`U6D21`|...|...||...||...|...|...|...|`U6D2F`|Single|
+|0x70|`U6D30`|`U6D31`|...|...||...||...|...|...|...|`U6D3F`|Single|
+|0x80|`U8`|`I8`|`BOOL`|`STR1B`||||`SREF8`|||||Scalar1|
+|0x90|`U16`|`I16`||`STR2B`||||`SREF16`|`APACK`||||Scalar2|
+|0xA0|`U32`|`I32`||`STR4B`||`F32`|||`OPACK`||||Scalar4|
+|0xB0|`U64`|`I64`|`TIME`|`STR8B`||`F64`|||`DOCSTA`|`DOCEND`|||Scalar8|
+|0xC0|`BLOB1X`|`STR1X`|||||||||`CMNT1X`|`PAD1X`|ByteSeq1|
+|0xD0|`BLOB2X`|`STR2X`|||||||||`CMNT2X`|`PAD2X`|ByteSeq2|
+|0xE0|`BLOB4X`|`STR4X`|||||||||||ByteSeq4|
+|0xF0|`BLOB8X`|`STR8X`|||||||||||ByteSeq8|
 
 ----
 
@@ -121,13 +133,15 @@ blob = BLOB1X | BLOB2X | BLOB4X | BLOB8X
 
 #### Version (`format_version`)
 
-`0x01`
+|Version|Description|
+|:--:|:--|
+|0x01|v0.1: experimental version|
 
 #### Flags (`format_flags`)
 
 |Bit Range|Mnemonic|Description|
 |:--:|:--:|:--|
-|\[7\]|`enable_crc`|CRC Enable|
+|\[7\]|`enable_crc`|CRC enable|
 |\[6:0\]|-|reserved|
 
 ### Document End (`DOCEND`)
@@ -149,7 +163,7 @@ blob = BLOB1X | BLOB2X | BLOB4X | BLOB8X
 |Condition|Value of CRC|
 |:--:|:--|
 |`enable_crc` = 0|`0x00000000`|
-|`enable_crc` = 1|CRC Value|
+|`enable_crc` = 1|CRC value|
 
 - CRC calculation must be performed on all bytes from the beginning of `DOCSTA` to before `CRC` field (including padding and comments).
 - Polynomial for CRC: `0x04c11db7`.
@@ -163,76 +177,65 @@ blob = BLOB1X | BLOB2X | BLOB4X | BLOB8X
 |Offset|Mnemonic|Description|
 |:--:|:--:|:--|
 |+0|`APACK`|OpCode|
-|+1|`value_packing_arg`|Value Packing Argument|
+|+1|`array_packing_flags`|array packing flags|
+|+2|`type_info`|common type information of all elements|
 
-#### `value_packing_arg`
+#### `type_info`
 
 |Bit Range|Mnemonic|Description|
 |:--:|:--:|:--|
-|7:6|`value_align_size`|Aligment Size|
-|5:0|`val_type`|Value Type|
+|7:6|-|reserved|
+|5:0|`opcode_offset`|aligment size|
 
-#### `value_align_size`
+- `opcode_offset[3:0]` must be in the range 0x0 to 0xB.
+- (0x80 + `opcode_offset`) is used as the actual OpCode.
+
+#### `array_packing_flags`
+
+|Bit Range|Mnemonic|Description|
+|:--:|:--:|:--|
+|7:2|-|reserved|
+|1:0|`alignment_size`|aligment size|
+
+#### `alignment_size`
 
 |Value|Aligment Boundary|
 |:--:|:--|
 |0|No aligmnent|
-|1|2 Byte boundary|
-|2|4 Byte boundary|
-|3|8 Byte boundary|
-
-#### `val_type`
-
-|`val_type[3:0]`|OpCode|
-|:--:|:--:|
-|0x0-B|`val_type` + 0x80 (128)|
-|0xC-F|`val_type` + 0xB4 (180)|
+|1|2 byte boundary|
+|2|4 byte boundary|
+|3|8 byte boundary|
 
 ### Packed Object (`OPACK`)
 
 |Offset|Mnemonic|Description|
 |:--:|:--:|:--|
 |+0|`OPACK`|OpCode|
-|+1|`key_packing_arg`|Key Packing Argument|
-|+2|`value_packing_arg`|Value Packing Argument|
+|+1|`object_packing_flags[7:0]`|object packing flags|
+|+2|`object_packing_flags[15:8]`|object packing flags|
+|+3|`key_type_info`|common type information of all keys|
+|+4|`value_type_info`|common type information of all values|
 
-#### `key_packing_arg`
+#### `key_type_info`, `value_type_info`
+
+See table of `array_packing_flags.type_info`.
+
+#### `object_packing_flags`
 
 |Bit Range|Mnemonic|Description|
 |:--:|:--:|:--|
-|7:6|`key_align_size`|Aligment Size|
-|5|`separate_kv`|Make keys and value into separate chunks|
-|4|reserved|
-|3:0|`key_type`|Value Type|
+|15:6|-|reserved|
+|7:4|`layout_mode`|contents layout mode|
+|3:2|`value_alignment_size`|value aligment size|
+|1:0|`key_alignment_size`|key aligment size|
 
-#### `key_align_size`
+#### `value_alignment_size`, `key_alignment_size`
 
-See table of `value_align_size`.
+See table of `array_packing_flags.alignment_size`.
 
 Alignment is performed based on the beginning of the blob data, not the beginning of the document.
 
 ![](./images/separate_kv.png)
-
-#### `key_type`
-
-|`key_type[1:0]`|Key Type|
-|:--:|:--:|
-|0x0|`U8`|
-|0x1|`U16`|
-|0x2|`U32`|
-|0x3|`U64`|
-|0x4|`I8`|
-|0x5|`I16`|
-|0x6|`I32`|
-|0x7|`I64`|
-|0x8|reserved|
-|0x9|reserved|
-|0xA|`STR4B`|
-|0xB|reserved|
-|0xC|`STR1X`|
-|0xD|`STR2X`|
-|0xE|`STR4X`|
-|0xF|`STR8X`|
 
 ----
 
@@ -245,14 +248,14 @@ Alignment is performed based on the beginning of the blob data, not the beginnin
 |Offset|U8, I8|U16, I16|U32, I32|U64, I64|Description|
 |:--:|:--:|:--:|:--:|:--:|:--|
 |+0|`TID`|`TID`|`TID`|`TID`|OpCode|
-|+1|`value[7:0]`|`value[7:0]`|`value[7:0]`|`value[7:0]`|Value|
-|+2||`value[15:8]`|`value[15:8]`|`value[15:8]`|Value|
-|+3|||`value[23:16]`|`value[23:16]`|Value|
-|+4|||`value[31:24]`|`value[31:24]`|Value|
-|+5||||`value[39:32]`|Value|
-|+6||||`value[47:40]`|Value|
-|+7||||`value[55:48]`|Value|
-|+8||||`value[63:56]`|Value|
+|+1|`value[7:0]`|`value[7:0]`|`value[7:0]`|`value[7:0]`|value|
+|+2||`value[15:8]`|`value[15:8]`|`value[15:8]`|value|
+|+3|||`value[23:16]`|`value[23:16]`|value|
+|+4|||`value[31:24]`|`value[31:24]`|value|
+|+5||||`value[39:32]`|value|
+|+6||||`value[47:40]`|value|
+|+7||||`value[55:48]`|value|
+|+8||||`value[63:56]`|value|
 
 - `value`: unsigned/signed integer value (two's complement)
 
@@ -263,14 +266,14 @@ Alignment is performed based on the beginning of the blob data, not the beginnin
 |Offset|F32|F64|Description|
 |:--:|:--:|:--:|:--|
 |+0|`TID`|`TID`|OpCode|
-|+1|`value[7:0]`|`value[7:0]`|Value|
-|+2|`value[15:8]`|`value[15:8]`|Value|
-|+3|`value[23:16]`|`value[23:16]`|Value|
-|+4|`value[31:24]`|`value[31:24]`|Value|
-|+5||`value[39:32]`|Value|
-|+6||`value[47:40]`|Value|
-|+7||`value[55:48]`|Value|
-|+8||`value[63:56]`|Value|
+|+1|`value[7:0]`|`value[7:0]`|value|
+|+2|`value[15:8]`|`value[15:8]`|value|
+|+3|`value[23:16]`|`value[23:16]`|value|
+|+4|`value[31:24]`|`value[31:24]`|value|
+|+5||`value[39:32]`|value|
+|+6||`value[47:40]`|value|
+|+7||`value[55:48]`|value|
+|+8||`value[63:56]`|value|
 
 - `value`: floating point value (IEEE754)
 
@@ -318,19 +321,34 @@ Alignment is performed based on the beginning of the blob data, not the beginnin
 
 - Byte array of UTF-8.
 
-### 4-Byte String (`STR4B`)
+### Short String (`STRnB`)
 
-- US-ASCII string.
-- `"xyz"` is same as `0x007a7978`.
-- All unused bytes must be filled with `0x00`.
+- NULL-terminated string.
+- All unused bytes must be filled with NULL (`0x00`).
+- If there is no NULL byte, it is the same size as the number of bytes in `data`.
 
-|Length|Byte\[0\]|Byte\[1\]|Byte\[2\]|Byte\[3\]|
-|:--:|:--:|:--:|:--:|:--:|
-|0|`0x00`|`0x00`|`0x00`|`0x00`|
-|1|Char\[0\]|`0x00`|`0x00`|`0x00`|
-|2|Char\[0\]|Char\[1\]|`0x00`|`0x00`|
-|3|Char\[0\]|Char\[1\]|Char\[2\]|`0x00`|
-|4|Char\[0\]|Char\[1\]|Char\[2\]|Char\[3\]|
+#### Valid Example
+
+|Value|Length|`STR1B`|`STR2B`|`STR4B`|`STR8B`|
+|:--|:--:|:--:|:--:|:--:|:--:|
+|`""`|0|0x00|0x0000|0x00000000|0x0000000000000000|
+|`"a"`|0|0x61|0x0061|0x00000061|0x0000000000000061|
+|`"ab"`|0|-|0x6261|0x00006261|0x0000000000006261|
+|`"abcd"`|0|-|-|0x64636261|0x0000000064636261|
+|`"abcdefgh"`|0|-|-|-|0x6867666564636261|
+
+#### Invalid Example
+
+- 0x00626100
+- 0x62000061
+
+### Dictionary Reference (`SREF8`, `SREF16`)
+
+#### Pre-defined Strings
+
+|Key|String Value|
+|:--:|:--|
+|0-127|reserved|
 
 ### Null (`NULL`)
 
@@ -343,21 +361,13 @@ Alignment is performed based on the beginning of the blob data, not the beginnin
 - Padding and comments can be placed between any tokens. They must not be placed before `DOCSTA` and after `DOCEND`.
 - Padding and comments must be skipped during the parsing.
 
-### Padding (`PAD`)
+### Padding (`PAD`, `PADnX`)
 
 - Can be used for data alignment.
+- All values of `data` of `PADnX` must be 0x00 and they must not have any meaning.
 
-### Comment (`CMNTnL`)
+### Comment (`CMNTnX`)
 
 - Byte array of UTF-8.
-
-----
-
-#### Pre-defined Meta Data IDs
-
-|Identifier|Description|
-|:--:|:--|
-|0-63|Reserved|
-|others|User Defined|
 
 ----
