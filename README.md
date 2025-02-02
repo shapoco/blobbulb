@@ -124,7 +124,7 @@ meta-object = META <object>
 |+0|`DOCSTA`|See OpCode Map|OpCode|
 |+1|`MARKER[7:0]`|0x42 (`'B'`)|
 |+2|`MARKER[15:8]`|0x6c (`'l'`)|
-|+3|`MARKER[23:16]`|0x4c (`'L'`)|
+|+3|`MARKER[23:16]`|0x35 (`'5'`)|
 |+4|`MARKER[31:24]`|0x62 (`'b'`)|
 |+5|`format_version`|Format Version Number|
 |+6|`format_flags`|Flags|
